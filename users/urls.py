@@ -1,8 +1,6 @@
 from django.urls import path
-from rest_framework import views
-from users.views import *
+from .views import RegisterView
 
 urlpatterns = [
-    #path('profile/detail/user/<int:pk>/', GetUserProfile.as_view(), name = 'profile_detail'),
-    
+    path('register/', RegisterView.as_view(), name='register_user'),
 ]
