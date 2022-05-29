@@ -74,4 +74,22 @@ class CommentDelete(generics.DestroyAPIView):
         comment.delete()
         return Response ({'success': 'comentario eliminado con exito'})
 
+#--------add Post to Favorite and Delete Post from Favorite------
+class FavoriteCreateDelete(generics.DestroyAPIView):
+
+    def delete(self, request, pk):
+        post = Post.objects.filter(code = pk).first()
+
+        if Favorite.objects.filter(post_code = post.code).exists():
+            
+            post_favorite=Favorite.objects.filter(post_code = post.code).first()
+            post_favorite.delete()
+            return Response ({'success': 'post eliminado de fovoritos con exito'})
+        else:
+            Favorite.objects.create(
+                user_author_code = request.user,
+                post_code = post
+            )
+            return Response ({'success': 'favorito creado con exito'})
+
 
