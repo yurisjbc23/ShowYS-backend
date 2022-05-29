@@ -3,6 +3,7 @@ from rest_framework import views
 from post.views import *
 
 urlpatterns = [
-    #path('post/create/', PostCreate.as_view(), name = 'post_create'),
+    path('create/post/', PostCreate.as_view(), name = 'post_create'),
+    path('create/image/post/', ImageCreate.as_view(), name = 'image_create'),
     
 ]
