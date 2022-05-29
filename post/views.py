@@ -47,6 +47,31 @@ class ImageCreate(generics.CreateAPIView):
         ImageSerializer(data=new_image)
         return Response ({'success': 'imagen del post guardada con exito'})   
 
+#----------------Create comment----------------------
+class CommentCreate(generics.CreateAPIView):
+    serializer_class = CommentSerializer
 
+    def post(self, request, pk):
+        post = Post.objects.filter(code = pk).first()
+        data = self.request.data
+
+        message = data['message']
+        
+        comment = Comment.objects.create(
+            user_author_code = request.user,
+            post_code = post,
+            message = message
+        )
+
+        CommentSerializer(data=comment)
+        return Response ({'success': 'comentario creado con exito'})
+
+#----------------Delete comment----------------------------
+class CommentDelete(generics.DestroyAPIView):
+
+    def delete(self, request, pk):
+        comment=Comment.objects.filter(code = pk).first()
+        comment.delete()
+        return Response ({'success': 'comentario eliminado con exito'})
 
 
