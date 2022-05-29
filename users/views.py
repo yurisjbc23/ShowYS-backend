@@ -64,4 +64,21 @@ class CreateProfile(generics.CreateAPIView):
         )
         
         CreateProfileSerializer(data=profile)
-        return Response ({'success': 'cuenta de usuario creada con exito'}) 
+        return Response ({'success': 'cuenta de usuario creada con exito'})
+
+#--------Follow User and Unfollow User---------------
+class FollowUnfollow(generics.DestroyAPIView):
+    def delete(self, request, pk):
+        other_user = User.objects.filter(id = pk).first()
+
+        if Follow.objects.filter(user_from = request.user.id, user_to = other_user.id).exists():
+            
+            unfollow = Follow.objects.filter(user_from = request.user.id, user_to = other_user.id).first()
+            unfollow.delete()
+            return Response ({'success': 'unfollow exitoso'})
+        else:
+            Follow.objects.create(
+                user_from = request.user,
+                user_to = other_user
+            )
+            return Response ({'success': 'follow exitoso'})
