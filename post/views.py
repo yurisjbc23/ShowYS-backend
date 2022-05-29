@@ -92,4 +92,20 @@ class FavoriteCreateDelete(generics.DestroyAPIView):
             )
             return Response ({'success': 'favorito creado con exito'})
 
+#------------Create Like and Delete Like------
+class LikeCreateDelete(generics.DestroyAPIView):
 
+    def delete(self, request, pk):
+        post = Post.objects.filter(code = pk).first()
+
+        if Like.objects.filter(post_code = post.code).exists():
+            
+            post_like=Like.objects.filter(post_code = post.code).first()
+            post_like.delete()
+            return Response ({'success': 'like eliminado del post con exito'})
+        else:
+            Like.objects.create(
+                user_author_code = request.user,
+                post_code = post
+            )
+            return Response ({'success': 'like en post agregado con exito'})
