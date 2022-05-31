@@ -37,17 +37,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):   
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError(
-                {"password": "Password fields didn't match."})            
+                {"password": "Password fields didn't match."})   
+        if not attrs['first_name'] or not attrs['last_name']:
+            raise serializers.ValidationError(
+                {"fullname": "You must provide a first or last name."})   
         return attrs
-
-    def create(self, validated_data):
-        user = User.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
-        )
-
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
