@@ -45,7 +45,31 @@ class ImageCreate(generics.CreateAPIView):
             image = image
         )
         ImageSerializer(data=new_image)
-        return Response ({'success': 'imagen del post guardada con exito'})   
+        return Response ({'success': 'imagen del post guardada con exito'})
+
+#----------------Create and Delete hashtag Post-------------
+class HashtagCreate(generics.CreateAPIView):
+    serializer_class = HashtagSerializer
+
+class PostHashtagCreateDelete(generics.DestroyAPIView):
+    def delete(self, request, pk):
+
+        last_post = Post.objects.filter(user_author_code = request.user.id).latest('created_date')
+
+        if Hashtag.objects.filter(code = pk).exists():
+            hashtag = Hashtag.objects.filter(code = pk).first()
+            if PostHashtag.objects.filter(post_code = last_post.code, hashtag_code = hashtag.code).exists():
+               post_hashtag = PostHashtag.objects.filter(post_code = last_post.code, hashtag_code = hashtag.code).first()
+               post_hashtag.delete()
+               return Response ({'success': 'hashtag eliminado del post de forma exitosa'})
+            else:
+                PostHashtag.objects.create(
+                    post_code = last_post,
+                    hashtag_code = hashtag
+                )
+                return Response ({'message': 'el hashtag ha sido agregado con exito al post'})
+        else:
+            return Response ({'error': 'el hashtag no existe'})  
 
 #----------------Create comment----------------------
 class CommentCreate(generics.CreateAPIView):
