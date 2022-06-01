@@ -82,3 +82,26 @@ class FollowUnfollow(generics.DestroyAPIView):
                 user_to = other_user
             )
             return Response ({'success': 'follow exitoso'})
+
+#---------------------Retrieve my profile------------------------------------
+"falta traer la lista de imagenes"
+class MyProfileRetrieve(generics.RetrieveAPIView):
+
+    def get(self, request):
+        user = request.user
+        profile = request.user.profile
+        user_post = Post.objects.filter(user_author_code = user.id)
+
+        data_user_profile = {
+            'first_name' : user.first_name,
+            'last_name' : user.last_name,
+            'username' : user.username,
+            'photo' : profile.photo,
+            'bio' : profile.biography,
+            'post' : user_post.count(),
+            'followers' : Follow.objects.filter(user_to = user.id).count(),
+            'following' : Follow.objects.filter(user_from = user.id).count()
+            }
+        user_profile_serializer = UserProfileSerializer(data = data_user_profile)
+        if user_profile_serializer.is_valid():
+            return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
