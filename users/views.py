@@ -105,3 +105,62 @@ class MyProfileRetrieve(generics.RetrieveAPIView):
         user_profile_serializer = UserProfileSerializer(data = data_user_profile)
         if user_profile_serializer.is_valid():
             return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
+
+#-----------------Retrieve other user profile--------------------------------
+"falta traer la lista de imagenes"
+class OtherProfileRetrieve(generics.RetrieveAPIView):
+
+    def get(self, request, pk):
+        user = User.objects.filter(id = pk)
+        profile = user.profile
+        user_post = Post.objects.filter(user_author_code = user.id)
+
+        if profile.is_private == True:
+
+            if Follow.objects.filter(user_from = request.user.id, user_to = user.id).exists():
+                #debe traer las imagenes
+                
+                data_user_profile = {
+                'first_name' : user.first_name,
+                'last_name' : user.last_name,
+                'username' : user.username,
+                'photo' : profile.photo,
+                'bio' : profile.biography,
+                'post' : user_post.count(),
+                'followers' : Follow.objects.filter(user_to = user.id).count(),
+                'following' : Follow.objects.filter(user_from = user.id).count()
+                }
+                user_profile_serializer = UserProfileSerializer(data = data_user_profile)
+                if user_profile_serializer.is_valid():
+                    return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
+
+            else:# aqui NO debe traer imagenes
+                data_user_profile = {
+                'first_name' : user.first_name,
+                'last_name' : user.last_name,
+                'username' : user.username,
+                'photo' : profile.photo,
+                'bio' : profile.biography,
+                'post' : user_post.count(),
+                'followers' : Follow.objects.filter(user_to = user.id).count(),
+                'following' : Follow.objects.filter(user_from = user.id).count()
+                }
+                user_profile_serializer = UserProfileSerializer(data = data_user_profile)
+                if user_profile_serializer.is_valid():
+                    return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
+
+        else:#aqui si debe traer las imagenes
+
+            data_user_profile = {
+                'first_name' : user.first_name,
+                'last_name' : user.last_name,
+                'username' : user.username,
+                'photo' : profile.photo,
+                'bio' : profile.biography,
+                'post' : user_post.count(),
+                'followers' : Follow.objects.filter(user_to = user.id).count(),
+                'following' : Follow.objects.filter(user_from = user.id).count()
+                }
+            user_profile_serializer = UserProfileSerializer(data = data_user_profile)
+            if user_profile_serializer.is_valid():
+                return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
