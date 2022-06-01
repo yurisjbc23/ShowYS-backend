@@ -12,5 +12,11 @@ class ImageSerializer(serializers.ModelSerializer):
         model = Image
         fields = ['image']
 
+class HashtagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Hashtag
+        fields = '__all__'
+
 class CommentSerializer(serializers.Serializer):
     message = serializers.CharField(max_length=255)
