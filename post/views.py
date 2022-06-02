@@ -12,7 +12,8 @@ from post.serializers import *
 
 #----------Create Post and Image--------------
 class PostCreate(generics.CreateAPIView):
-    serializer_class = PostSerializer
+
+    serializer_class = PostSerializer2
     
     def post(self, request):
 
@@ -27,7 +28,8 @@ class PostCreate(generics.CreateAPIView):
             description = description,
             location = location
         )
-        PostSerializer(data=post)
+
+        PostSerializer2(data=post)
         return Response ({'success': 'post creado con exito'})
 
 class ImageCreate(generics.CreateAPIView):
@@ -132,4 +134,5 @@ class LikeCreateDelete(generics.DestroyAPIView):
                 user_author_code = request.user,
                 post_code = post
             )
+
             return Response ({'success': 'like en post agregado con exito'})
