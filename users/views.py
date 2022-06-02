@@ -1,18 +1,18 @@
 from distutils.log import error
 from django.contrib.auth.models import User
 
-from rest_framework import generics
+from rest_framework import generics,status
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from rest_framework import generics, status
+from rest_framework import viewsets
 
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import *
 from .permissions import IsUserActivate
 from post.models import Post
-from .models import Profile
+from .models import Profile, Follow
 
 class RegisterView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
@@ -42,7 +42,7 @@ class RegisterView(generics.CreateAPIView):
         else:
             return Response(serializer.errors, 400)
         
-class LoginView(ObtainAuthToken):
+class LoginView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
     def post(self, request, *args, **kwargs):
@@ -51,11 +51,14 @@ class LoginView(ObtainAuthToken):
         if serializer.is_valid():
             try:
                 user = serializer.validated_data['user']
-                posts = Post.objects.filter(user = user.id)
+                posts = Post.objects.filter(user_author_code = user.id)
                 token, created = Token.objects.get_or_create(user=user)
                 return Response({
                     'token': token.key,
-                    'user': user,
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                             },
                     'post': [post for post in posts],
                 },200)
             except Exception as e:
@@ -63,9 +66,49 @@ class LoginView(ObtainAuthToken):
         else:
             return Response(serializer.errors, 400)
         
+class CheckAuthenticatedView(APIView):
+    def get(self, request, format=None):
+        user = request.user
+        try:
+            isAuthenticated = user.is_authenticated
+            if isAuthenticated:
+                posts = Post.objects.filter(user_author_code = user.id)
+                return Response({
+                    'isAuthenticated': 'successfully',
+                    'user': {
+                        'id': user.id,
+                        'username': user.username,
+                             },
+                    'post': [post for post in posts],
+                },200)
+            else:
+                return Response({'isAuthenticated': 'error'}, 400)
+        except:
+                return Response({'isAuthenticated': 'error'}, 500)
+        
 class LogoutView(APIView):
     permission_classes = (IsUserActivate,)
     def get(self, request, format=None):
         # simply delete the token to force a login
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
+
+class HomeView(APIView):
+    # permission_classes = (AllowAny,)
+    # def get(self, request, format=None):
+    #     user = request.user
+    #     followers = [f.user_from for f in Follow.objects.filter(user_to=user.id)]
+    #     posts = [post for post in Post.objects.filter(pk__in=followers).order_by()]
+    # queryset=User.objects.all()
+    serializer_class = UserSerializer 
+
+    # def get_queryset(self):
+    #     queryset=User.objects.filter(id=8)
+    #     return queryset
+    def get(self, request, format=None):
+        user = request.user
+        followers = [f.user_to.id for f in Follow.objects.filter(user_from=user.id)]
+        # followers = [f.user_to for f in Follow.objects.filter(user_from=8)]
+        feed = [post for post in Post.objects.filter(user_author_code__in=followers).order_by('created_date')]
+        home = HomeSerializer(feed, many=True)
+        return Response(home.data)

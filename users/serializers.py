@@ -9,7 +9,7 @@ from rest_framework.response import Response
 import re
 
 from .models import Profile
-
+from post.serializers import *
 
 class RegisterSerializer(serializers.ModelSerializer):
     # https://medium.com/django-rest/django-rest-framework-login-and-register-user-fd91cf6029d5
@@ -92,3 +92,44 @@ class LoginSerializer(serializers.Serializer):
                 'Both "username" and "password" are required.', code='authorization')
         attrs['user'] = user
         return attrs
+
+
+
+
+
+
+
+
+
+
+
+
+
+class UserSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    class Meta:
+        model = User
+        fields = ('username', 'id','image')
+    def get_image(self, user):
+        profile = Profile.objects.get(user=user.id)
+        return ImageSerializer(profile, many=False).data['photo']
+        # photo = ImageSerializer(data={'photo':profile.first().photo})
+        # if photo.is_valid():
+        #     return photo.data
+        # else:
+        #     return {}
+
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['photo']
+
+class HomeSerializer(serializers.Serializer):
+    user = serializers.SerializerMethodField()
+    post = serializers.SerializerMethodField()
+    def get_user(self, post):
+        user_data = User.objects.get(id=post.user_author_code.id)
+        return UserSerializer(user_data, many=False).data
+        
+    def get_post(self, post):
+        return PostSerializer(post, many=False).data
