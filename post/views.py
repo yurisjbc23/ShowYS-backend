@@ -210,7 +210,7 @@ class FavoriteView(APIView):
         except Exception as e:
             return Response({'response':str(e)},500)
 
-class ProfilePostExploreView(APIView):
+class ProfilePostGaleryView(APIView):
     serializer_class = GalerySerializer 
     def get(self, request, pk , format=None):
         try:
