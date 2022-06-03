@@ -319,7 +319,7 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 class HomeView(APIView):
-    serializer_class = UserSerializer 
+    serializer_class = HomeSerializer 
     def get(self, request, format=None):
         try:
             user = request.user

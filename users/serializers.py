@@ -137,7 +137,10 @@ class UserSerializer(serializers.ModelSerializer):
         return ImageSerializer(profile, many=False).data['photo']
     def get_follow(self, user):
         current_user = self.context.get('user_id')
-        follow_data = bool(Follow.objects.filter(user_from=current_user,user_to=user.id).count())
+        if current_user != user.id:
+            follow_data = bool(Follow.objects.filter(user_from=current_user,user_to=user.id).count())
+        else:
+            follow_data = True
         return follow_data
 
 class ImageSerializer(serializers.ModelSerializer):
@@ -156,16 +159,12 @@ class HomeSerializer(serializers.Serializer):
         current_user = self.context.get('user_id')
         return PostSerializer(post, many=False, context ={'user_id': current_user}).data
     
-# class HomeSerializer(serializers.ModelSerializer):
-#     id = serializers.SerializerMethodField()
-#     image = serializers.SerializerMethodField()
-#     class Meta:
-#         model = Image
-#         fields = ['image']
-        
-#     def get_id(self, post):
-#         return post.code
-        
-#     def get_image(self, post):
-        
-#         return PostSerializer(post, many=False, context ={'user_id': current_user}).data
+class GalerySerializer(serializers.Serializer):
+    id = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    def get_id(self, post):
+        return post.code
+    def get_image(self, post):
+        img = Image.objects.filter(post_code=post.code).first()
+        return img.image
+    

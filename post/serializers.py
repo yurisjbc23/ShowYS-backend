@@ -28,10 +28,20 @@ class PostSerializer(serializers.ModelSerializer):
 class ImagePostSerializer(serializers.Serializer):
     image = serializers.ListField(child = serializers.ImageField(max_length=255))
 
-class PostSerializer2(serializers.Serializer):
-    
-    description = serializers.CharField(max_length=1000)
-    location = serializers.CharField(max_length=50)
+class PostCreateSerializer(serializers.ModelSerializer):
+    hashtags = serializers.ListField(child = serializers.CharField(max_length=50, required=True))
+    images = serializers.ListField(child = serializers.ImageField(max_length=255, required=True))
+    class Meta:
+        model = Post
+        fields = ['description','location','hashtags','images']
+    def validate(self, attrs):
+        if len(attrs['hashtags']) == 0:
+            raise serializers.ValidationError(
+                "You must provide 1 or more hashtag.", code='hashtags')
+        if len(attrs['images']) == 0:
+            raise serializers.ValidationError(
+                'You must provide 1 or more images.', code='images')
+        return attrs
 
 class ImageSerializer(serializers.ModelSerializer):
     

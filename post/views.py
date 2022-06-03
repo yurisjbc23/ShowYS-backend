@@ -3,37 +3,62 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
+from rest_framework.views import APIView
 
 import datetime
 from django.utils import timezone
 
 from users.models import *
+from users.serializers import *
 from post.models import *
 from post.serializers import *
-
+from .utils import checkFriendship
 # Create your views here.
 
 #----------Create Post and Image--------------
 class PostCreate(generics.CreateAPIView):
-
-    serializer_class = PostSerializer2
-    
+    serializer_class = PostCreateSerializer
     def post(self, request):
+        serializer = self.serializer_class(
+            data=request.data, context={'request': request})
+        if serializer.is_valid():
+            try:
+                post = Post.objects.create(
+                    user_author_code=request.user.id,
+                    description=serializer.validated_data['description'],
+                    location=serializer.validated_data['location'],
+                )
+                post.save()
+                for img in serializer.validated_data['images']:
+                    image = Image.objects.create(
+                        post_code=post.code,
+                        image=img,
+                    )
+                    image.save()
+                for h in serializer.validated_data['hashtags']:
+                    exist = Hashtag.objects.filter(name=h).first()
+                    if not exist:
+                        hashtag = Hashtag.objects.create(
+                            name=h,
+                        )
+                        hashtag.save()
+                        postHashtag = PostHashtag.objects.create(
+                            post_code=post.code,
+                            hashtag_code=hashtag.code
+                        )
+                        postHashtag.save()
+                    else:
+                        postHashtag = PostHashtag.objects.create(
+                            post_code=post.code,
+                            hashtag_code=exist.code
+                        )
+                        postHashtag.save()
+                return Response({'successful':'The post was successfully published'}, 200)
+            except Exception as e:
+                return Response({'error': str(e)}, 500)
+        else:
+            return Response(serializer.errors, 400)
 
-        data = self.request.data
-
-
-        description = data['description']
-        location = data['location']
-
-        post = Post.objects.create(
-            user_author_code = request.user,
-            description = description,
-            location = location
-        )
-
-        PostSerializer2(data=post)
-        return Response ({'success': 'post creado con exito'})
 
 class ImageCreate(generics.CreateAPIView):
     serializer_class = ImageSerializer
@@ -161,3 +186,44 @@ class PostDelete(generics.DestroyAPIView):
         else:
             return Response ({'error': 'el post no existe'})
 
+class FavoriteView(APIView):
+    serializer_class = HomeSerializer 
+    def get(self, request, format=None):
+        try:
+            user = request.user
+            code_list = [post.user_author_code for post in Favorite.objects.filter(user_author_code=user.id).order_by('created_date')]
+            favorite_posts = [post for post in Post.objects.filter(code__in=code_list)]
+            favorite = HomeSerializer(favorite_posts, many=True, context ={'user_id': user.id})
+            return Response(favorite.data)
+        except Exception as e:
+            return Response({'response':str(e)},500)
+
+class ProfilePostExploreView(APIView):
+    serializer_class = HomeSerializer 
+    def get(self, request, pk , format=None):
+        try:
+            user = User.objects.filter(id=pk).first()
+            if user:
+                if (user.is_private and checkFriendship(request.user.id,user.id)) or (not user.is_private):
+                    profile_posts = [post for post in Post.objects.filter(user_author_code=user.id)]
+                    posts = HomeSerializer(profile_posts, many=True, context ={'user_id': user.id})
+                    return Response(posts.data)
+                else:
+                    return Response({'response':"private"},200)
+            else:
+                return Response({'response':"That user doesn't exist"},400)
+        except Exception as e:
+            return Response({'response':str(e)},500)
+        
+class CurrentProfilePostExploreView(APIView):
+    serializer_class = HomeSerializer 
+    def get(self, request, format=None):
+        try:
+            user = request.user
+            profile_posts = [post for post in Post.objects.filter(user_author_code=user.id)]
+            posts = HomeSerializer(profile_posts, many=True, context ={'user_id': user.id})
+            return Response(posts.data)
+        except Exception as e:
+            return Response({'response':str(e)},500)
+        
+        
