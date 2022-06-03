@@ -186,6 +186,18 @@ class PostDelete(generics.DestroyAPIView):
         else:
             return Response ({'error': 'el post no existe'})
 
+class FavoriteGalleryView(APIView):
+    serializer_class = GalerySerializer 
+    def get(self, request, format=None):
+        try:
+            user = request.user
+            code_list = [post.user_author_code for post in Favorite.objects.filter(user_author_code=user.id).order_by('created_date')]
+            favorite_posts = [post for post in Post.objects.filter(code__in=code_list)]
+            favorite = GalerySerializer(favorite_posts, many=True, context ={'user_id': user.id})
+            return Response(favorite.data)
+        except Exception as e:
+            return Response({'response':str(e)},500)
+
 class FavoriteView(APIView):
     serializer_class = HomeSerializer 
     def get(self, request, format=None):
@@ -198,6 +210,23 @@ class FavoriteView(APIView):
         except Exception as e:
             return Response({'response':str(e)},500)
 
+class ProfilePostExploreView(APIView):
+    serializer_class = GalerySerializer 
+    def get(self, request, pk , format=None):
+        try:
+            user = User.objects.filter(id=pk).first()
+            if user:
+                if (user.is_private and checkFriendship(request.user.id,user.id)) or (not user.is_private):
+                    profile_posts = [post for post in Post.objects.filter(user_author_code=user.id)]
+                    posts = GalerySerializer(profile_posts, many=True, context ={'user_id': user.id})
+                    return Response(posts.data)
+                else:
+                    return Response({'response':"private"},200)
+            else:
+                return Response({'response':"That user doesn't exist"},400)
+        except Exception as e:
+            return Response({'response':str(e)},500)  
+        
 class ProfilePostExploreView(APIView):
     serializer_class = HomeSerializer 
     def get(self, request, pk , format=None):
@@ -213,8 +242,19 @@ class ProfilePostExploreView(APIView):
             else:
                 return Response({'response':"That user doesn't exist"},400)
         except Exception as e:
+            return Response({'response':str(e)},500)        
+
+class CurrentProfilePostGalleryView(APIView):
+    serializer_class = GalerySerializer 
+    def get(self, request, format=None):
+        try:
+            user = request.user
+            profile_posts = [post for post in Post.objects.filter(user_author_code=user.id)]
+            posts = GalerySerializer(profile_posts, many=True, context ={'user_id': user.id})
+            return Response(posts.data)
+        except Exception as e:
             return Response({'response':str(e)},500)
-        
+
 class CurrentProfilePostExploreView(APIView):
     serializer_class = HomeSerializer 
     def get(self, request, format=None):
@@ -225,5 +265,3 @@ class CurrentProfilePostExploreView(APIView):
             return Response(posts.data)
         except Exception as e:
             return Response({'response':str(e)},500)
-        
-        

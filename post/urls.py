@@ -13,7 +13,9 @@ urlpatterns = [
     path('create/delete/like/post/<int:pk>/', LikeCreateDelete.as_view(), name = 'like_create_delete'),
     path('delete/post/<int:pk>/', PostDelete.as_view(), name = 'post_delete'),
     
+    path('gallery/favorite/', FavoriteGalleryView.as_view(), name='gallery_favorite'),
     path('explore/favorite/', FavoriteView.as_view(), name='explore_favorite'),
+    
     path('explore/profileposts/', CurrentProfilePostExploreView.as_view(), name='explore_favorite'),
     path('explore/otherprofileposts/<int:pk>/', ProfilePostExploreView.as_view(), name='explore_favorite'),
 
