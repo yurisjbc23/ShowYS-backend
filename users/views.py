@@ -105,6 +105,8 @@ class MyProfileRetrieve(generics.RetrieveAPIView):
         user_profile_serializer = UserProfileSerializer(data = data_user_profile)
         if user_profile_serializer.is_valid():
             return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
+        else:
+            return Response(user_profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 #-----------------Retrieve other user profile--------------------------------
 "falta traer la lista de imagenes"
@@ -133,6 +135,8 @@ class OtherProfileRetrieve(generics.RetrieveAPIView):
                 user_profile_serializer = UserProfileSerializer(data = data_user_profile)
                 if user_profile_serializer.is_valid():
                     return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
+                else:
+                    return Response(user_profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
             else:# aqui NO debe traer imagenes
                 data_user_profile = {
@@ -148,6 +152,8 @@ class OtherProfileRetrieve(generics.RetrieveAPIView):
                 user_profile_serializer = UserProfileSerializer(data = data_user_profile)
                 if user_profile_serializer.is_valid():
                     return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
+                else:
+                    return Response(user_profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
         else:#aqui si debe traer las imagenes
 
@@ -164,6 +170,8 @@ class OtherProfileRetrieve(generics.RetrieveAPIView):
             user_profile_serializer = UserProfileSerializer(data = data_user_profile)
             if user_profile_serializer.is_valid():
                 return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
+            else:
+                return Response(user_profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 #--------------Retrieve and Update my user profile--------------
 class MyProfileUpdate(generics.RetrieveUpdateAPIView):
@@ -189,7 +197,8 @@ class MyProfileUpdate(generics.RetrieveUpdateAPIView):
         if profile_serializer.is_valid():
             return Response(profile_serializer.data, status = status.HTTP_200_OK)
         else:
-            return Response({'error': 'algo salio mal'}, status = status.HTTP_400_BAD_REQUEST)
+            return Response(profile_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        
 
     def put(self, request):
         user = request.user
