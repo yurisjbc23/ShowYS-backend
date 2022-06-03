@@ -4,6 +4,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 
+import datetime
+from django.utils import timezone
+
 from users.models import *
 from post.models import *
 from post.serializers import *
@@ -133,3 +136,25 @@ class LikeCreateDelete(generics.DestroyAPIView):
                 post_code = post
             )
             return Response ({'success': 'like en post agregado con exito'})
+
+#------------------Delete Post--------------------------
+class PostDelete(generics.DestroyAPIView):
+    def delete(self, request, pk):
+
+        if Post.objects.filter(code = pk, user_author_code = request.user.id).exists():
+
+            post = Post.objects.filter(code = pk, user_author_code = request.user.id).first()
+            now = timezone.now()
+            twenty_four_hours_ago = post.created_date + datetime.timedelta(hours=24)
+
+            if now < twenty_four_hours_ago:
+
+                post.delete()
+                return Response ({'success': 'post eliminado con exito'})
+
+            else:
+                return Response ({'message': 'el post no puede ser eliminado han pasado mas de 24 horas desde su creacion'})
+    
+        else:
+            return Response ({'error': 'el post no existe'})
+
