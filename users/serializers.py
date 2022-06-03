@@ -27,7 +27,7 @@ class UserProfileSerializer(serializers.Serializer):
     last_name = serializers.CharField(max_length=150)
     username = serializers.CharField(max_length=150)
     photo = serializers.ImageField(max_length=255)
-    bio = serializers.CharField(max_length=255)
+    biography = serializers.CharField(max_length=255, allow_blank=True)
     post = serializers.IntegerField()
     followers = serializers.IntegerField()
     following = serializers.IntegerField()
@@ -126,31 +126,19 @@ class LoginSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
-
-
-
-
-
-
-
-
-
-
-
-
 class UserSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
+    follow = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ('username', 'id','image')
+        fields = ('username', 'id','image','follow')
     def get_image(self, user):
         profile = Profile.objects.get(user=user.id)
         return ImageSerializer(profile, many=False).data['photo']
-        # photo = ImageSerializer(data={'photo':profile.first().photo})
-        # if photo.is_valid():
-        #     return photo.data
-        # else:
-        #     return {}
+    def get_follow(self, user):
+        current_user = self.context.get('user_id')
+        follow_data = bool(Follow.objects.filter(user_from=current_user,user_to=user.id).count())
+        return follow_data
 
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -161,8 +149,23 @@ class HomeSerializer(serializers.Serializer):
     user = serializers.SerializerMethodField()
     post = serializers.SerializerMethodField()
     def get_user(self, post):
+        current_user = self.context.get('user_id')
         user_data = User.objects.get(id=post.user_author_code.id)
-        return UserSerializer(user_data, many=False).data
-        
+        return UserSerializer(user_data, many=False, context ={'user_id': current_user}).data
     def get_post(self, post):
-        return PostSerializer(post, many=False).data
+        current_user = self.context.get('user_id')
+        return PostSerializer(post, many=False, context ={'user_id': current_user}).data
+    
+# class HomeSerializer(serializers.ModelSerializer):
+#     id = serializers.SerializerMethodField()
+#     image = serializers.SerializerMethodField()
+#     class Meta:
+#         model = Image
+#         fields = ['image']
+        
+#     def get_id(self, post):
+#         return post.code
+        
+#     def get_image(self, post):
+        
+#         return PostSerializer(post, many=False, context ={'user_id': current_user}).data

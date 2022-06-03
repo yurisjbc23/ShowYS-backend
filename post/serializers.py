@@ -6,9 +6,10 @@ class PostSerializer(serializers.ModelSerializer):
     likesCount = serializers.SerializerMethodField()
     commentsCount = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    favorite = serializers.SerializerMethodField()
     class Meta:
         model = Post
-        fields = ('code', 'description','likesCount','commentsCount','image','created_date')
+        fields = ('code', 'description','likesCount','commentsCount','image','created_date','favorite')
     def get_likesCount(self, post):
         like = Like.objects.filter(post_code=post.code, user_author_code=post.user_author_code.id).count()
         return like
@@ -18,6 +19,11 @@ class PostSerializer(serializers.ModelSerializer):
     def get_image(self, post):
         image = [img.image for img in Image.objects.filter(post_code=post.code)]
         return ImagePostSerializer({'image':image}, many=False).data['image']
+    def get_favorite(self, post):
+        current_user = self.context.get('user_id')
+        favorite_data = bool(Favorite.objects.filter(post_code=post.code, user_author_code=current_user).count())
+        return favorite_data
+
         
 class ImagePostSerializer(serializers.Serializer):
     image = serializers.ListField(child = serializers.ImageField(max_length=255))

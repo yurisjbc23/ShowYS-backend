@@ -1,4 +1,5 @@
 from distutils.log import error
+from urllib import response
 from django.contrib.auth.models import User
 
 from rest_framework import generics,status
@@ -92,7 +93,6 @@ class FollowUnfollow(generics.DestroyAPIView):
 #---------------------Retrieve my profile------------------------------------
 "falta traer la lista de imagenes"
 class MyProfileRetrieve(generics.RetrieveAPIView):
-
     def get(self, request):
         user = request.user
         profile = request.user.profile
@@ -103,7 +103,7 @@ class MyProfileRetrieve(generics.RetrieveAPIView):
             'last_name' : user.last_name,
             'username' : user.username,
             'photo' : profile.photo,
-            'bio' : profile.biography,
+            'biography' : profile.biography if profile.biography else '',
             'post' : user_post.count(),
             'followers' : Follow.objects.filter(user_to = user.id).count(),
             'following' : Follow.objects.filter(user_from = user.id).count()
@@ -111,6 +111,9 @@ class MyProfileRetrieve(generics.RetrieveAPIView):
         user_profile_serializer = UserProfileSerializer(data = data_user_profile)
         if user_profile_serializer.is_valid():
             return Response(user_profile_serializer.data, status = status.HTTP_200_OK)
+        else:
+            return Response(user_profile_serializer.errors, status = 400)
+
 
 #-----------------Retrieve other user profile--------------------------------
 "falta traer la lista de imagenes"
@@ -131,7 +134,7 @@ class OtherProfileRetrieve(generics.RetrieveAPIView):
                 'last_name' : user.last_name,
                 'username' : user.username,
                 'photo' : profile.photo,
-                'bio' : profile.biography,
+                'biography' : profile.biography,
                 'post' : user_post.count(),
                 'followers' : Follow.objects.filter(user_to = user.id).count(),
                 'following' : Follow.objects.filter(user_from = user.id).count()
@@ -146,7 +149,7 @@ class OtherProfileRetrieve(generics.RetrieveAPIView):
                 'last_name' : user.last_name,
                 'username' : user.username,
                 'photo' : profile.photo,
-                'bio' : profile.biography,
+                'biography' : profile.biography,
                 'post' : user_post.count(),
                 'followers' : Follow.objects.filter(user_to = user.id).count(),
                 'following' : Follow.objects.filter(user_from = user.id).count()
@@ -162,7 +165,7 @@ class OtherProfileRetrieve(generics.RetrieveAPIView):
                 'last_name' : user.last_name,
                 'username' : user.username,
                 'photo' : profile.photo,
-                'bio' : profile.biography,
+                'biography' : profile.biography,
                 'post' : user_post.count(),
                 'followers' : Follow.objects.filter(user_to = user.id).count(),
                 'following' : Follow.objects.filter(user_from = user.id).count()
@@ -178,6 +181,7 @@ class MyProfileUpdate(generics.RetrieveUpdateAPIView):
     def get(self, request):
         user = request.user
         profile = request.user.profile
+        user_post = Post.objects.filter(user_author_code = user.id)
 
 
         data_profile = {
@@ -188,6 +192,9 @@ class MyProfileUpdate(generics.RetrieveUpdateAPIView):
             'biography' : profile.biography,
             'date_birth': profile.date_birth,
             'phone': profile.phone,
+            'numberPosts' : user_post.count(),
+            'followers' : Follow.objects.filter(user_to = user.id).count(),
+            'following' : Follow.objects.filter(user_from = user.id).count(),
             'is_private' : profile.is_private
         }
 
@@ -195,7 +202,7 @@ class MyProfileUpdate(generics.RetrieveUpdateAPIView):
         if profile_serializer.is_valid():
             return Response(profile_serializer.data, status = status.HTTP_200_OK)
         else:
-            return Response({'error': 'algo salio mal'}, status = status.HTTP_400_BAD_REQUEST)
+            return Response(profile_serializer.errors, 400)
 
     def put(self, request):
         user = request.user
@@ -306,22 +313,14 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 class HomeView(APIView):
-    # permission_classes = (AllowAny,)
-    # def get(self, request, format=None):
-    #     user = request.user
-    #     followers = [f.user_from for f in Follow.objects.filter(user_to=user.id)]
-    #     posts = [post for post in Post.objects.filter(pk__in=followers).order_by()]
-    # queryset=User.objects.all()
     serializer_class = UserSerializer 
-
-    # def get_queryset(self):
-    #     queryset=User.objects.filter(id=8)
-    #     return queryset
     def get(self, request, format=None):
-        user = request.user
-        followers = [f.user_to.id for f in Follow.objects.filter(user_from=user.id)]
-        # followers = [f.user_to for f in Follow.objects.filter(user_from=8)]
-        feed = [post for post in Post.objects.filter(user_author_code__in=followers).order_by('created_date')]
-        home = HomeSerializer(feed, many=True)
-        return Response(home.data)
+        try:
+            user = request.user
+            followers = [f.user_to.id for f in Follow.objects.filter(user_from=user.id)]
+            feed = [post for post in Post.objects.filter(user_author_code__in=followers).order_by('created_date')]
+            home = HomeSerializer(feed, many=True, context ={'user_id': request.user.id})
+            return Response(home.data)
+        except Exception as e:
+            return Response({'response':str(e)},500)
 
