@@ -22,4 +22,6 @@ urlpatterns = [
     path('gallery/otherprofileposts/<int:pk>/', CurrentProfilePostGalleryView.as_view(), name='gallery_favorite'),
     path('explore/otherprofileposts/<int:pk>/', ProfilePostExploreView.as_view(), name='explore_favorite'),
 
+    path('search/post/hashtag/<str:hashtag>/', SearchByHashtag.as_view(), name = 'search_hashtag'),
+
 ]

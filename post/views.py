@@ -265,3 +265,17 @@ class CurrentProfilePostExploreView(APIView):
             return Response(posts.data)
         except Exception as e:
             return Response({'response':str(e)},500)
+
+#---------Search post by hashtag-------------
+class SearchByHashtag(APIView):
+    serializer_class = UserSerializer 
+    def get(self, request, hashtag, format=None):
+        try:
+            user = request.user
+            hashtags = [h.code for h in Hashtag.objects.filter(name__icontains = hashtag)]
+            posts_hashtags = [ph.post_code.code for ph in PostHashtag.objects.filter(hashtag_code__in = hashtags)]
+            posts = [p for p in Post.objects.filter(code__in = posts_hashtags).order_by('-created_date')]
+            search = SearchSerializer(posts, many=True, context ={'user_id': request.user.id})
+            return Response(search.data)
+        except Exception as e:
+            return Response({'response':str(e)},500)
