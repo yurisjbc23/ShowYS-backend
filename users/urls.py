@@ -13,4 +13,6 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(), name='logout_user'),
     path('checkAuthenticated/', CheckAuthenticatedView.as_view(), name='checkAuthenticated_user'),
     path('feed/', HomeView.as_view(), name='feed_user'),
+    path('search/user/username/<str:username>/', SearchUser.as_view(), name = 'search_user'),
+
 ]

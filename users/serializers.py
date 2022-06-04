@@ -167,4 +167,10 @@ class GalerySerializer(serializers.Serializer):
     def get_image(self, post):
         img = Image.objects.filter(post_code=post.code).first()
         return img.image
-    
+
+class SearchUserSerializer(serializers.Serializer):
+    user = serializers.SerializerMethodField()
+    def get_user(self, user):
+        current_user = self.context.get('user_id')
+        user_data = User.objects.get(id=user.id)
+        return UserSerializer(user_data, many=False, context ={'user_id': current_user}).data

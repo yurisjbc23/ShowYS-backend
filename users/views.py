@@ -330,3 +330,16 @@ class HomeView(APIView):
         except Exception as e:
             return Response({'response':str(e)},500)
 
+#---------Search User by username--------
+class SearchUser(APIView):
+    serializer_class = UserSerializer 
+    def get(self, request, username, format=None):
+        try:
+            user = request.user
+            users = [u for u in User.objects.filter(username__icontains = username)]
+            print(users)
+            search = SearchUserSerializer(users, many=True, context ={'user_id': request.user.id})
+            return Response(search.data)
+        except Exception as e:
+            return Response({'response':str(e)},500)
+
