@@ -337,7 +337,6 @@ class SearchUser(APIView):
         try:
             user = request.user
             users = [u for u in User.objects.filter(username__icontains = username)]
-            print(users)
             search = SearchUserSerializer(users, many=True, context ={'user_id': request.user.id})
             return Response(search.data)
         except Exception as e:
